@@ -1,8 +1,7 @@
 using Vintagestory.API.Common;
 using StackSizesMod.Configuration;
 
-[assembly: ModInfo("Stack Sizes",
-    Authors = new[] { "Craluminum2413" })]
+[assembly: ModInfo(name: "Stack Sizes", modID: "stacksizes", Side = "Server")]
 
 namespace StackSizesMod;
 
@@ -12,9 +11,7 @@ class Core : ModSystem
 
     public override void AssetsFinalize(ICoreAPI api)
     {
-        // Reading it twice because it creates empty dictionary on first load
         ModConfig.ReadConfig(api);
-        ModConfig.ReadConfig(api);
-        api.World.Logger.Event("started 'Stack Sizes' mod");
+        api.World.Logger.Event("started '{0}' mod", Mod.Info.ModID);
     }
 }

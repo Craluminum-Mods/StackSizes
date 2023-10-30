@@ -1,78 +1,85 @@
 using System.Collections.Generic;
+using System.Linq;
 using StackSizesMod.Configuration;
 using Vintagestory.API.Common;
-using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
 namespace StackSizesMod;
 
 public static class Patches
 {
-    public static void ApplyPatches(this ICoreAPI api, StackSizesConfig config)
+    private static bool IsAllowed<T>(T obj)
     {
-        if (config.StackSizes?.Count == 0) return;
+        return obj is not BlockMultiblock;
+    }
 
-        foreach (var stackSize in config.StackSizes)
+    public static void ApplyPatches(this ICoreAPI api, Config config)
+    {
+        if (config.BlockStackSizes?.Count != 0)
         {
-            var obj = api.GetCollectible(stackSize);
-            if (obj == null) continue;
-            if (obj.Code == null) continue;
+            foreach ((string key, int value) in config.BlockStackSizes)
+            {
+                Block block = api.World.Blocks.FirstOrDefault(x => x.Code == new AssetLocation(key));
 
-            obj.MaxStackSize = stackSize.Value;
+                if (block == null || block.Code == null)
+                {
+                    continue;
+                }
+
+                block.MaxStackSize = value;
+            }
+        }
+
+        if (config.ItemStackSizes?.Count != 0)
+        {
+            foreach ((string key, int value) in config.ItemStackSizes)
+            {
+                Item item = api.World.Items.FirstOrDefault(x => x.Code == new AssetLocation(key));
+
+                if (item == null || item.Code == null)
+                {
+                    continue;
+                }
+
+                item.MaxStackSize = value;
+            }
         }
     }
 
-    public static StackSizesConfig FillConfig(this ICoreAPI api, StackSizesConfig config)
+    public static Dictionary<string, int> GetDefaultStackSizesForBlocks(this ICoreAPI api)
     {
-        if (config.StackSizes == null) return config;
+        Dictionary<string, int> stackSizes = new();
 
-        foreach (var obj in api.World.Collectibles)
+        foreach (Block block in api.World.Blocks)
         {
-            if (obj?.Code == null) continue;
-            if (obj?.Id == 0) continue;
+            if (!IsAllowed(block))
+            {
+                continue;
+            }
 
-            var code = obj?.Code?.ToString();
-            if (config.StackSizes.ContainsKey(code)) continue;
-            if (!obj.IsAllowed(api)) continue;
-
-            config.StackSizes.Add(code, obj.MaxStackSize);
+            string code = block.Code?.ToString();
+            if (!string.IsNullOrEmpty(code) && !stackSizes.ContainsKey(code))
+            {
+                stackSizes.Add(code, block.MaxStackSize);
+            }
         }
 
-        return config;
+        return stackSizes;
     }
 
-    private static bool IsAllowed(this CollectibleObject obj, ICoreAPI api)
+    public static Dictionary<string, int> GetDefaultStackSizesForItems(this ICoreAPI api)
     {
-        if (obj.Code.EndVariant() == "snow")
-            return false;
+        Dictionary<string, int> stackSizes = new();
 
-        if (obj is ItemCreature || obj is BlockForFluidsLayer || obj is BlockMultiblock || obj is ItemWearable)
-            return false;
-
-        if (obj.Tool != null)
-            return false;
-
-        if (obj.Class == "ItemLiquidPortion")
-            return false;
-
-        if (obj.Attributes?["backpack"].Exists == true)
-            return false;
-
-        if (obj is Item)
-            return true;
-
-        if (obj.Is("caveart") || obj.Is("ontree") || obj.Is("microblock") || obj.Is("creative") || obj.Is("stalagsection") || obj.Is("wildbeehive") || obj.Is("bunchocandles"))
-            return false;
-
-        var numbers1to7 = new[] { "1", "2", "3", "4", "5", "6", "7" };
-        if ((obj.Is("sand") || obj.Is("gravel")) && numbers1to7.Contains(obj.Code.EndVariant()))
-            return false;
-
-        if (!obj.DoesBlockDropItself(api))
+        foreach (Item item in api.World.Items)
         {
-            return false;
+            string code = item.Code?.ToString();
+            if (!string.IsNullOrEmpty(code))
+            {
+                stackSizes.Add(code, item.MaxStackSize);
+            }
         }
 
-        return true;
+        return stackSizes;
     }
 }
