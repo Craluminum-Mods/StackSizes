@@ -5,5 +5,5 @@
     "name": "Stack Sizes",
     "description": "Allows to configure max stack size of every vanilla and modded item and block",
     "authors": ["Craluminum2413"],
-    "version": "1.1.0"
+    "version": "1.1.1"
 }

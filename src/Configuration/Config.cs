@@ -1,57 +1,59 @@
 using System.Collections.Generic;
 using Vintagestory.API.Common;
 
-namespace StackSizesMod.Configuration
+namespace StackSizesMod.Configuration;
+
+public class Config
 {
-    public class Config
+    public float StackSizeMultiplier { get; set; } = 1.0f;
+    public Dictionary<string, int> BlockStackSizes { get; set; } = new();
+    public Dictionary<string, int> ItemStackSizes { get; set; } = new();
+
+    public Config() { }
+
+    public Config(ICoreAPI api)
     {
-        public Dictionary<string, int> BlockStackSizes { get; set; } = new();
-        public Dictionary<string, int> ItemStackSizes { get; set; } = new();
+        FillDefault(api);
+    }
 
-        public Config() { }
-
-        public Config(ICoreAPI api)
+    public Config(ICoreAPI api, Config previousConfig)
+    {
+        foreach ((string key, int value) in previousConfig.BlockStackSizes)
         {
-            FillDefault(api);
+            if (!BlockStackSizes.ContainsKey(key))
+            {
+                BlockStackSizes.Add(key, value);
+            }
         }
 
-        public Config(ICoreAPI api, Config previousConfig)
+        foreach ((string key, int value) in previousConfig.ItemStackSizes)
         {
-            foreach ((string key, int value) in previousConfig.BlockStackSizes)
+            if (!ItemStackSizes.ContainsKey(key))
             {
-                if (!BlockStackSizes.ContainsKey(key))
-                {
-                    BlockStackSizes.Add(key, value);
-                }
+                ItemStackSizes.Add(key, value);
             }
-
-            foreach ((string key, int value) in previousConfig.ItemStackSizes)
-            {
-                if (!ItemStackSizes.ContainsKey(key))
-                {
-                    ItemStackSizes.Add(key, value);
-                }
-            }
-
-            FillDefault(api);
         }
 
-        private void FillDefault(ICoreAPI api)
-        {
-            foreach ((string key, int value) in api.GetDefaultStackSizesForBlocks())
-            {
-                if (!BlockStackSizes.ContainsKey(key))
-                {
-                    BlockStackSizes.Add(key, value);
-                }
-            }
+        FillDefault(api);
 
-            foreach ((string key, int value) in api.GetDefaultStackSizesForItems())
+        StackSizeMultiplier = previousConfig.StackSizeMultiplier;
+    }
+
+    private void FillDefault(ICoreAPI api)
+    {
+        foreach ((string key, int value) in api.GetDefaultStackSizesForBlocks())
+        {
+            if (!BlockStackSizes.ContainsKey(key))
             {
-                if (!ItemStackSizes.ContainsKey(key))
-                {
-                    ItemStackSizes.Add(key, value);
-                }
+                BlockStackSizes.Add(key, value);
+            }
+        }
+
+        foreach ((string key, int value) in api.GetDefaultStackSizesForItems())
+        {
+            if (!ItemStackSizes.ContainsKey(key))
+            {
+                ItemStackSizes.Add(key, value);
             }
         }
     }

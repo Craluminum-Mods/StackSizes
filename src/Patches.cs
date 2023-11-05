@@ -15,6 +15,16 @@ public static class Patches
 
     public static void ApplyPatches(this ICoreAPI api, Config config)
     {
+        if (config.StackSizeMultiplier is not 0 and not 1.0f)
+        {
+            foreach (CollectibleObject obj in api.World.Collectibles)
+            {
+                obj.MaxStackSize = (int)(obj.MaxStackSize * config.StackSizeMultiplier);
+            }
+
+            return;
+        }
+
         if (config.BlockStackSizes?.Count != 0)
         {
             foreach ((string key, int value) in config.BlockStackSizes)
