@@ -84,7 +84,7 @@ public static class Patches
         foreach (Item item in api.World.Items)
         {
             string code = item.Code?.ToString();
-            if (!string.IsNullOrEmpty(code))
+            if (!string.IsNullOrEmpty(code) && !stackSizes.ContainsKey(code))
             {
                 stackSizes.Add(code, item.MaxStackSize);
             }
