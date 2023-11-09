@@ -12,6 +12,6 @@ class Core : ModSystem
     public override void AssetsFinalize(ICoreAPI api)
     {
         ModConfig.ReadConfig(api);
-        api.World.Logger.Event("started '{0}' mod", Mod.Info.ModID);
+        api.World.Logger.Event("started '{0}' mod", Mod.Info.Name);
     }
 }
